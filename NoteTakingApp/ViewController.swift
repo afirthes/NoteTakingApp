@@ -9,7 +9,11 @@ import UIKit
 
 class ViewController: UIViewController  {
     
+    private var isStarFiltered = false
+    
     @IBOutlet weak var tableView: UITableView!
+    
+    @IBOutlet weak var starFilterButton: UIBarButtonItem!
     
     private var notes = [Note]()
     private var notesModel = NotesModel()
@@ -22,7 +26,15 @@ class ViewController: UIViewController  {
         
         notesModel.delegate = self
         
-        notesModel.getNotes()
+        setStarFilterButton()
+    
+        notesModel.getNotes(isStarFiltered)
+    }
+    
+    func setStarFilterButton() {
+        let imageName = isStarFiltered ? "star.fill" : "star"
+        
+        starFilterButton.image = UIImage(systemName: imageName)
     }
 
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
@@ -38,6 +50,12 @@ class ViewController: UIViewController  {
         
         
         
+    }
+    
+    @IBAction func starFilterTapped(_ sender: Any) {
+        isStarFiltered.toggle()
+        setStarFilterButton()
+        notesModel.getNotes(isStarFiltered)
     }
 }
 

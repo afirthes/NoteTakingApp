@@ -17,15 +17,31 @@ class NotesModel {
     
     var delegate: NotesModelProtocol?
     
-    func getNotes() {
+    var listener: ListenerRegistration?
+    
+    deinit {
+        listener?.remove()
+    }
+    
+    func getNotes(_ starredOnly:Bool = false) {
+        
+        listener?.remove()
         
         let db = Firestore.firestore()
-        db.collection("notes").getDocuments { querySnapshot, error in
+        
+        var query:Query = db.collection("notes")
+        
+        if starredOnly {
+            query = query.whereField("isStarred", isEqualTo: true)
+        }
+        
+        self.listener = query.addSnapshotListener { querySnapshot, error in
             if error == nil && querySnapshot != nil {
                 var notes = [Note]()
                 
                 for doc in querySnapshot!.documents {
                     
+                    // curred
                     let createdAtDate:Date = Timestamp.dateValue( doc["createdAt"] as! Timestamp )()
                     let lastUpdatedAtDate:Date = Timestamp.dateValue( doc["lastUpdatedAt"] as! Timestamp )()
                     
@@ -44,6 +60,17 @@ class NotesModel {
                     self.delegate?.notesRetrieved(notes: notes)
                 }
                 
+            }
+        }
+    }
+    
+    func updateStarredStatus(_ docId: String, _ isStarred: Bool) {
+        let db = Firestore.firestore()
+        db.collection("notes").document(docId).updateData(["isStarred": isStarred]) { error in
+            if error != nil {
+                print(error?.localizedDescription)
+            } else {
+                print("is starred changed successfully")
             }
         }
     }
